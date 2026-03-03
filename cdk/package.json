@@ -1,0 +1,43 @@
+{
+  "name": "crm-contact-manager-cdk",
+  "version": "2.0.0",
+  "description": "CDK Infrastructure for CRM Contact Manager Slack Bot - Refactored",
+  "type": "module",
+  "bin": {
+    "cdk": "dist/bin/app.js"
+  },
+  "scripts": {
+    "prebuild": "prettier --check .",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "deploy": "pnpm build && pnpm cdk deploy",
+    "diff": "pnpm build && pnpm cdk diff",
+    "synth": "pnpm build && pnpm cdk synth",
+    "destroy": "pnpm cdk destroy",
+    "clean": "rm -rf cdk.out dist coverage",
+    "fmt": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@types/node": "catalog:",
+    "aws-cdk": "catalog:",
+    "esbuild": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "ts-node": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
+  },
+  "dependencies": {
+    "@types/aws-lambda": "catalog:",
+    "aws-cdk-lib": "catalog:",
+    "bedrock-agentcore": "^0.2.0",
+    "constructs": "catalog:",
+    "strands-agents": "^0.0.1",
+    "truemark-cdk-lib": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
