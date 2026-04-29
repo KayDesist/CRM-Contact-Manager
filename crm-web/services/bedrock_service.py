@@ -8,21 +8,26 @@ from typing import Optional
 import boto3
 
 _client = None
+_client_region = None
 _last_error = None
 
 
 def _get_client():
-    global _client
-    if _client is None:
+    global _client, _client_region
+    region = os.getenv("AWS_REGION", "us-east-2")
+    if _client is None or _client_region != region:
         _client = boto3.client(
             "bedrock-runtime",
-            region_name=os.getenv("AWS_REGION", "us-east-2"),
+            region_name=region,
         )
+        _client_region = region
     return _client
 
 
-MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-sonnet-4-6")
-INFERENCE_PROFILE_ID = os.getenv("BEDROCK_INFERENCE_PROFILE_ID", "").strip()
+def _get_target_model_id() -> str:
+    profile_id = os.getenv("BEDROCK_INFERENCE_PROFILE_ID", "").strip()
+    model_id = os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-sonnet-4-6").strip()
+    return profile_id or model_id
 
 CONTACT_EXTRACTION_PROMPT = """You are a contact information extraction assistant. Extract contact details from messages and return them in JSON format.
 
@@ -107,7 +112,7 @@ def _call_claude(
     global _last_error
     try:
         kwargs = {
-            "modelId": INFERENCE_PROFILE_ID or MODEL_ID,
+            "modelId": _get_target_model_id(),
             "messages": messages,
             "inferenceConfig": {"maxTokens": max_tokens, "temperature": temperature},
         }
@@ -126,6 +131,15 @@ def _call_claude(
 
 def get_last_bedrock_error() -> Optional[str]:
     return _last_error
+
+
+def get_bedrock_runtime_config() -> dict:
+    return {
+        "region": os.getenv("AWS_REGION", "us-east-2"),
+        "model_id": os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-sonnet-4-6").strip(),
+        "inference_profile_id": os.getenv("BEDROCK_INFERENCE_PROFILE_ID", "").strip(),
+        "target_model_id": _get_target_model_id(),
+    }
 
 
 def _parse_json(raw: str) -> Optional[dict]:

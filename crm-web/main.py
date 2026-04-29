@@ -12,7 +12,7 @@ from routes.chat_routes import router as chat_router
 
 
 APP_DIR = Path(__file__).resolve().parent
-load_dotenv(APP_DIR / ".env")
+load_dotenv(APP_DIR / ".env", override=True)
 
 
 @asynccontextmanager

@@ -11,6 +11,7 @@ from services.bedrock_service import (
     extract_edit_request,
     ask_claude_for_help,
     get_last_bedrock_error,
+    get_bedrock_runtime_config,
 )
 from services.monday_service import send_to_monday
 
@@ -138,11 +139,13 @@ def chat_message(
 
     bedrock_error = get_last_bedrock_error()
     if bedrock_error:
+        cfg = get_bedrock_runtime_config()
         return {
             "type": "error",
             "message": (
                 "Bedrock is not reachable from this app right now. "
                 "Check AWS CLI/profile, region, and model access. "
+                f"Target: {cfg['target_model_id']} in {cfg['region']}. "
                 f"Details: {bedrock_error}"
             ),
         }
@@ -178,10 +181,12 @@ def chat_image(
 
     bedrock_error = get_last_bedrock_error()
     if bedrock_error:
+        cfg = get_bedrock_runtime_config()
         return {
             "type": "error",
             "message": (
                 "Bedrock image extraction failed. Check AWS profile, region, and model access. "
+                f"Target: {cfg['target_model_id']} in {cfg['region']}. "
                 f"Details: {bedrock_error}"
             ),
         }
