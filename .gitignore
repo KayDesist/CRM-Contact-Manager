@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+node_modules/
+
+# Python app local files
+crm-web/.env
+crm-web/crm.db
+crm-web/venv/
+crm-web/__pycache__/
+crm-web/routes/__pycache__/
+crm-web/services/__pycache__/
+
+# IDE / local metadata
+.idea/

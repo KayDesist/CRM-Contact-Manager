@@ -1,0 +1,14 @@
+
+//how to start up the server
+cd crm-web 
+copy .env.example .env 
+uvicorn main:app --reload --port 8000 
+
+
+//demo-able areas right now 
+
+http://localhost:8000/static/login.html 
+
+http://localhost:8000/static/register.html  
+
+http://localhost:8000/static/dashboard.html

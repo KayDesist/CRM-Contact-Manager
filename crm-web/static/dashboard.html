@@ -1,1 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRM Contact Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #263348;
+      --border: #334155;
+      --accent: #3b82f6;
+      --accent2: #6366f1;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────────────────── */
+    .app { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ── Header ─────────────────────────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 60px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .header-title { font-size: 16px; font-weight: 700; }
+    .header-subtitle { font-size: 12px; color: var(--muted); }
+
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .user-badge {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+    .user-avatar {
+      width: 26px; height: 26px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      color: #fff;
+    }
+    .btn-logout {
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { border-color: var(--error); color: var(--error); }
+
+    /* ── Chat area ──────────────────────────────────────────────────────────── */
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scroll-behavior: smooth;
+    }
+    .chat-area::-webkit-scrollbar { width: 6px; }
+    .chat-area::-webkit-scrollbar-track { background: transparent; }
+    .chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Messages ───────────────────────────────────────────────────────────── */
+    .msg-row { display: flex; align-items: flex-end; gap: 10px; }
+    .msg-row.user { flex-direction: row-reverse; }
+
+    .msg-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .msg-avatar.bot {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+    }
+    .msg-avatar.user-av {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+    }
+
+    .bubble {
+      max-width: 65%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+    .bubble.bot {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+      color: var(--text);
+    }
+    .bubble.user {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .bubble.success {
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: #86efac;
+    }
+    .bubble.error {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+    }
+
+    /* bold in bubbles */
+    .bubble strong { font-weight: 600; }
+    /* code in bubbles */
+    .bubble code {
+      background: rgba(255,255,255,0.08);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    /* bullet points */
+    .bubble ul { padding-left: 18px; margin-top: 4px; }
+    .bubble li { margin-bottom: 2px; }
+
+    /* ── Contact card ───────────────────────────────────────────────────────── */
+    .contact-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      max-width: 480px;
+    }
+    .card-header {
+      background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(99,102,241,0.15));
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .card-avatar {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .card-name { font-size: 17px; font-weight: 700; }
+    .card-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    .card-fields { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .field-row { display: flex; gap: 10px; align-items: flex-start; }
+    .field-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; width: 18px; }
+    .field-content { flex: 1; min-width: 0; }
+    .field-label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; color: #64748b; text-transform: uppercase; }
+    .field-value { font-size: 13px; color: var(--text); word-break: break-all; margin-top: 1px; }
+
+    .priority-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .priority-High { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+    .priority-Medium { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+    .priority-Low { background: rgba(34,197,94,0.15); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+
+    .card-actions {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-approve, .btn-reject, .btn-edit {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid;
+    }
+    .btn-approve {
+      background: rgba(34,197,94,0.1);
+      border-color: rgba(34,197,94,0.4);
+      color: #86efac;
+    }
+    .btn-approve:hover { background: rgba(34,197,94,0.2); }
+    .btn-reject {
+      background: rgba(239,68,68,0.1);
+      border-color: rgba(239,68,68,0.4);
+      color: #fca5a5;
+    }
+    .btn-reject:hover { background: rgba(239,68,68,0.2); }
+    .btn-edit {
+      background: rgba(99,102,241,0.1);
+      border-color: rgba(99,102,241,0.4);
+      color: #a5b4fc;
+    }
+    .btn-edit:hover { background: rgba(99,102,241,0.2); }
+
+    /* ── Edit form (inline) ─────────────────────────────────────────────────── */
+    .edit-form {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+    .edit-form.open { display: block; }
+    .edit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .edit-field { display: flex; flex-direction: column; gap: 4px; }
+    .edit-field label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; color: #64748b; text-transform: uppercase; }
+    .edit-field input {
+      padding: 8px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .edit-field input:focus { border-color: var(--accent); }
+    .edit-field.full { grid-column: 1 / -1; }
+    .edit-actions { display: flex; gap: 8px; }
+    .btn-save {
+      padding: 8px 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .btn-cancel {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { border-color: var(--muted); }
+
+    /* ── Typing indicator ───────────────────────────────────────────────────── */
+    .typing { display: flex; align-items: center; gap: 6px; padding: 10px 14px; }
+    .typing span {
+      width: 7px; height: 7px;
+      background: var(--muted);
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+
+    /* ── Input bar ──────────────────────────────────────────────────────────── */
+    .input-bar {
+      padding: 16px 24px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+    .btn-attach {
+      width: 42px; height: 42px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-attach:hover { border-color: var(--accent); color: var(--accent); }
+    #msg-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      max-height: 120px;
+      line-height: 1.5;
+      transition: border-color 0.2s;
+    }
+    #msg-input:focus { border-color: var(--accent); }
+    #msg-input::placeholder { color: #475569; }
+    .btn-send {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: opacity 0.2s;
+    }
+    .btn-send:hover { opacity: 0.85; }
+    .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    #file-input { display: none; }
+
+    /* ── Welcome empty state ────────────────────────────────────────────────── */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 12px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 4px; }
+    .empty-title { font-size: 18px; font-weight: 600; color: var(--text); }
+    .empty-body { font-size: 14px; max-width: 360px; line-height: 1.6; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 4px; pointer-events: all; }
+    .chip {
+      padding: 6px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(59,130,246,0.05); }
+  </style>
+</head>
+<body>
+<div class="app">
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <div class="header-icon">📇</div>
+      <div>
+        <div class="header-title">CRM Contact Manager</div>
+        <div class="header-subtitle">Powered by Claude AI + Monday.com</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span id="user-name">Loading…</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <!-- Chat messages -->
+  <div class="chat-area" id="chat-area">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">💬</div>
+      <div class="empty-title">Start a conversation</div>
+      <div class="empty-body">
+        Paste contact details, describe someone you met, or upload a business card — I'll extract the info and add it to Monday.com.
+      </div>
+      <div class="chips">
+        <div class="chip" onclick="useChip(this)">Met John Smith, VP at Acme, john@acme.com</div>
+        <div class="chip" onclick="useChip(this)">Sarah Johnson, CTO of TechCorp, 555-9876</div>
+        <div class="chip" onclick="useChip(this)">Upload a business card image 📷</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input bar -->
+  <div class="input-bar">
+    <input type="file" id="file-input" accept="image/*,application/pdf" />
+    <button class="btn-attach" title="Upload business card" onclick="document.getElementById('file-input').click()">📎</button>
+    <textarea id="msg-input" rows="1" placeholder="Paste contact info or type a message…"></textarea>
+    <button class="btn-send" id="send-btn" onclick="sendMessage()" title="Send">
+      &#9658;
+    </button>
+  </div>
+</div>
+
+<script>
+// ── Auth ─────────────────────────────────────────────────────────────────────
+const token = localStorage.getItem('token');
+if (!token) window.location.href = 'login.html';
+
+const user = JSON.parse(localStorage.getItem('user') || '{}');
+document.getElementById('user-name').textContent = user.username || 'User';
+document.getElementById('user-avatar').textContent = (user.username || 'U')[0].toUpperCase();
+
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href = 'login.html';
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const chatArea = document.getElementById('chat-area');
+const emptyState = document.getElementById('empty-state');
+const msgInput = document.getElementById('msg-input');
+const sendBtn = document.getElementById('send-btn');
+
+function hideEmpty() {
+  emptyState.style.display = 'none';
+}
+
+function scrollBottom() {
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+// Simple markdown renderer: **bold**, `code`, bullet lines
+function renderMd(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n•\s/g, '\n• ')
+    .split('\n')
+    .map(line => {
+      if (line.startsWith('• ') || line.startsWith('- ')) {
+        return '<li>' + line.slice(2) + '</li>';
+      }
+      return line;
+    })
+    .join('<br/>');
+}
+
+function wrapList(html) {
+  return html.replace(/(<li>.*?<\/li>)(<br\/>|$)/g, (_, li) => li);
+}
+
+// ── Message rendering ─────────────────────────────────────────────────────────
+function addUserMessage(text) {
+  hideEmpty();
+  const row = document.createElement('div');
+  row.className = 'msg-row user';
+  row.innerHTML = `
+    <div class="msg-avatar user-av">${(user.username || 'U')[0].toUpperCase()}</div>
+    <div class="bubble user">${escapeHtml(text)}</div>
+  `;
+  chatArea.appendChild(row);
+  scrollBottom();
+}
+
+function addBotMessage(text, type = 'bot') {
+  hideEmpty();
+  const row = document.createElement('div');
+  row.className = 'msg-row';
+  const cls = type === 'success' ? 'success' : type === 'error' ? 'error' : 'bot';
+  row.innerHTML = `
+    <div class="msg-avatar bot">🤖</div>
+    <div class="bubble ${cls}">${renderMd(text)}</div>
+  `;
+  chatArea.appendChild(row);
+  scrollBottom();
+  return row;
+}
+
+function addTyping() {
+  hideEmpty();
+  const row = document.createElement('div');
+  row.className = 'msg-row';
+  row.id = 'typing-indicator';
+  row.innerHTML = `
+    <div class="msg-avatar bot">🤖</div>
+    <div class="bubble bot"><div class="typing"><span></span><span></span><span></span></div></div>
+  `;
+  chatArea.appendChild(row);
+  scrollBottom();
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Contact card ─────────────────────────────────────────────────────────────
+function addContactCard(contact, headerMsg) {
+  hideEmpty();
+
+  if (headerMsg) addBotMessage(headerMsg);
+
+  const fullName = [contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'Unknown';
+  const subLine = [contact.title, contact.company].filter(Boolean).join(' · ');
+
+  const fields = [
+    { icon: '✉️', label: 'Email', value: contact.email },
+    { icon: '📞', label: 'Phone', value: contact.phone },
+    { icon: '🏢', label: 'Company', value: contact.company },
+    { icon: '💼', label: 'Title', value: contact.title },
+    { icon: '🔗', label: 'LinkedIn', value: contact.linkedin },
+    { icon: '📝', label: 'Notes', value: contact.notes },
+    { icon: '⚡', label: 'Priority', value: contact.priority, isPriority: true },
+  ].filter(f => f.value);
+
+  const fieldsHtml = fields.map(f => {
+    let val = escapeHtml(f.value);
+    if (f.isPriority) {
+      val = `<span class="priority-badge priority-${f.value}">${f.value}</span>`;
+    }
+    return `
+      <div class="field-row">
+        <div class="field-icon">${f.icon}</div>
+        <div class="field-content">
+          <div class="field-label">${f.label}</div>
+          <div class="field-value">${val}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Build edit inputs
+  const editFields = [
+    { key: 'firstName', label: 'First Name' },
+    { key: 'lastName', label: 'Last Name' },
+    { key: 'email', label: 'Email', full: false },
+    { key: 'phone', label: 'Phone' },
+    { key: 'company', label: 'Company' },
+    { key: 'title', label: 'Title' },
+    { key: 'priority', label: 'Priority (High/Medium/Low)' },
+    { key: 'linkedin', label: 'LinkedIn', full: true },
+    { key: 'notes', label: 'Notes', full: true },
+  ];
+
+  const editInputsHtml = editFields.map(f => `
+    <div class="edit-field${f.full ? ' full' : ''}">
+      <label>${f.label}</label>
+      <input type="text" data-field="${f.key}" value="${escapeHtml(contact[f.key] || '')}" placeholder="${f.label}" />
+    </div>
+  `).join('');
+
+  const cardId = 'card-' + Date.now();
+  const row = document.createElement('div');
+  row.className = 'msg-row';
+  row.innerHTML = `
+    <div class="msg-avatar bot">🤖</div>
+    <div class="contact-card" id="${cardId}">
+      <div class="card-header">
+        <div class="card-avatar">👤</div>
+        <div>
+          <div class="card-name">${escapeHtml(fullName)}</div>
+          ${subLine ? `<div class="card-sub">${escapeHtml(subLine)}</div>` : ''}
+        </div>
+      </div>
+      <div class="card-fields">${fieldsHtml || '<div style="color:var(--muted);font-size:13px;">No additional fields extracted.</div>'}</div>
+      <div class="card-actions">
+        <button class="btn-approve" onclick="approveContact()">✓ Approve</button>
+        <button class="btn-reject" onclick="rejectContact()">✗ Discard</button>
+        <button class="btn-edit" onclick="toggleEdit('${cardId}')">✎ Edit</button>
+      </div>
+      <div class="edit-form" id="edit-${cardId}">
+        <div class="edit-grid">${editInputsHtml}</div>
+        <div class="edit-actions">
+          <button class="btn-save" onclick="saveEdit('${cardId}')">Save Changes</button>
+          <button class="btn-cancel" onclick="toggleEdit('${cardId}')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  `;
+  chatArea.appendChild(row);
+  scrollBottom();
+}
+
+function toggleEdit(cardId) {
+  const form = document.getElementById('edit-' + cardId);
+  form.classList.toggle('open');
+}
+
+async function saveEdit(cardId) {
+  const form = document.getElementById('edit-' + cardId);
+  const inputs = form.querySelectorAll('input[data-field]');
+  const updates = {};
+  inputs.forEach(inp => {
+    if (inp.value.trim()) updates[inp.dataset.field] = inp.value.trim();
+  });
+
+  setBusy(true);
+  try {
+    const res = await api('/api/chat/edit-contact', 'POST', { updates });
+    if (res.type === 'contact_preview') {
+      // Replace this card by re-rendering
+      const cardRow = document.getElementById(cardId).closest('.msg-row');
+      cardRow.remove();
+      addContactCard(res.contact, res.message);
+    }
+  } catch (e) {
+    addBotMessage('Error saving edits: ' + e.message, 'error');
+  } finally {
+    setBusy(false);
+  }
+}
+
+// ── API calls ─────────────────────────────────────────────────────────────────
+async function api(url, method, body) {
+  const res = await fetch(url, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 401) {
+    logout();
+    throw new Error('Session expired');
+  }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Request failed');
+  return data;
+}
+
+function handleResponse(data) {
+  if (data.type === 'contact_preview') {
+    addContactCard(data.contact, data.message);
+  } else if (data.type === 'success') {
+    addBotMessage(data.message, 'success');
+  } else if (data.type === 'error') {
+    addBotMessage(data.message, 'error');
+  } else {
+    addBotMessage(data.message || 'No response.');
+  }
+}
+
+// ── Send message ──────────────────────────────────────────────────────────────
+function setBusy(busy) {
+  sendBtn.disabled = busy;
+  msgInput.disabled = busy;
+}
+
+async function sendMessage() {
+  const text = msgInput.value.trim();
+  if (!text) return;
+
+  addUserMessage(text);
+  msgInput.value = '';
+  autoResize();
+  setBusy(true);
+  addTyping();
+
+  try {
+    const data = await api('/api/chat/message', 'POST', { message: text });
+    removeTyping();
+    handleResponse(data);
+  } catch (e) {
+    removeTyping();
+    addBotMessage('Error: ' + e.message, 'error');
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function approveContact() {
+  addUserMessage('yes');
+  setBusy(true);
+  addTyping();
+  try {
+    const data = await api('/api/chat/message', 'POST', { message: 'yes' });
+    removeTyping();
+    handleResponse(data);
+  } catch (e) {
+    removeTyping();
+    addBotMessage('Error: ' + e.message, 'error');
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function rejectContact() {
+  addUserMessage('no');
+  setBusy(true);
+  addTyping();
+  try {
+    const data = await api('/api/chat/message', 'POST', { message: 'no' });
+    removeTyping();
+    handleResponse(data);
+  } catch (e) {
+    removeTyping();
+    addBotMessage('Error: ' + e.message, 'error');
+  } finally {
+    setBusy(false);
+  }
+}
+
+// ── File upload ───────────────────────────────────────────────────────────────
+document.getElementById('file-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = '';
+
+  addUserMessage(`📎 ${file.name}`);
+  setBusy(true);
+  addTyping();
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch('/api/chat/image', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: formData,
+    });
+    if (res.status === 401) { logout(); return; }
+    const data = await res.json();
+    removeTyping();
+    handleResponse(data);
+  } catch (e) {
+    removeTyping();
+    addBotMessage('Error uploading image: ' + e.message, 'error');
+  } finally {
+    setBusy(false);
+  }
+});
+
+// ── Textarea auto-resize ──────────────────────────────────────────────────────
+function autoResize() {
+  msgInput.style.height = 'auto';
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
+}
+msgInput.addEventListener('input', autoResize);
+msgInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// ── Example chip ─────────────────────────────────────────────────────────────
+function useChip(el) {
+  const text = el.textContent;
+  if (text.includes('Upload')) {
+    document.getElementById('file-input').click();
+    return;
+  }
+  msgInput.value = text;
+  autoResize();
+  msgInput.focus();
+}
+
+// ── Welcome message ───────────────────────────────────────────────────────────
+setTimeout(() => {
+  addBotMessage(
+    `Hi **${user.username || 'there'}**! 👋\n\nI'm your CRM assistant. Share contact info by:\n• **Typing** a description ("Met Sarah, CEO at Acme, sarah@acme.com")\n• **Pasting** contact details from anywhere\n• **Uploading** a business card image with 📎\n\nI'll extract the details and send them to your Monday.com board.`
+  );
+}, 100);
+</script>
+</body>
+</html>

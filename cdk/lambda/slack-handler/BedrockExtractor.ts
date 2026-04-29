@@ -1,7 +1,7 @@
 import {
   BedrockRuntimeClient,
   ConverseCommand,
-} from "@aws-sdk/client-bedrock-runtime";
+}from "@aws-sdk/client-bedrock-runtime";
 import { ContactInfo, EditRequest } from "./types";
 
 const bedrockClient = new BedrockRuntimeClient({

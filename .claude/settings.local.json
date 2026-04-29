@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"C:\\\\Users\\\\Kay\\\\Pro310-S1\\\\CRM-Contact-Manager\" -name \".env*\" ! -path \"*/.venv/*\" -exec cat {} \\\\;)",
+      "Bash(python -m pip install -r requirements.txt)",
+      "Bash(python -c ':*)",
+      "Bash(not exist:*)",
+      "Bash(python -m uvicorn main:app --reload --port 8000)",
+      "Bash(curl -s http://localhost:8000/ -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s -X POST http://localhost:8000/api/auth/register -H \"Content-Type: application/json\" -d \"{\\\\\"username\\\\\":\\\\\"testuser\\\\\",\\\\\"password\\\\\":\\\\\"testpass123\\\\\",\\\\\"monday_api_token\\\\\":\\\\\"test\\\\\",\\\\\"monday_board_id\\\\\":\\\\\"123\\\\\"}\")",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /F /PID 9000 /PID 13552 /PID 26224 /PID 30576)",
+      "Bash(taskkill //F //PID 9000)",
+      "Bash(taskkill //F //PID 13552)",
+      "Bash(taskkill //F //PID 26224)",
+      "Bash(taskkill //F //PID 30576)",
+      "Bash(curl -s -X POST http://localhost:8000/api/auth/register -H \"Content-Type: application/json\" -d \"{\\\\\"username\\\\\":\\\\\"kay\\\\\",\\\\\"password\\\\\":\\\\\"testpass123\\\\\",\\\\\"monday_api_token\\\\\":\\\\\"eyJhbGciOiJIUzI1NiJ9.test\\\\\",\\\\\"monday_board_id\\\\\":\\\\\"18409898978\\\\\"}\")"
+    ]
+  }
+}

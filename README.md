@@ -50,13 +50,13 @@ API Gateway  ──▶  Lambda Function
 
 ### Prerequisites
 
-| Tool | Notes |
-|------|-------|
-| **AWS CLI** | Configured with `aws configure` |
-| **Node.js 22+** | [nodejs.org](https://nodejs.org) |
-| **AWS CDK** | `npm install -g aws-cdk` |
-| **Slack workspace** | With permission to create apps |
-| **Monday.com** | With API access |
+| Tool                      | Notes                             |
+| ------------------------- | --------------------------------- |
+| **AWS CLI**         | Configured with `aws configure` |
+| **Node.js 22+**     | [nodejs.org](https://nodejs.org)     |
+| **AWS CDK**         | `npm install -g aws-cdk`        |
+| **Slack workspace** | With permission to create apps    |
+| **Monday.com**      | With API access                   |
 
 ---
 
@@ -78,12 +78,12 @@ cdk deploy
 
 In the **AWS Lambda Console**, find `CrmContactManager-SlackHandler` → Configuration → Environment variables:
 
-| Variable | Where to get it |
-|----------|----------------|
-| `SLACK_BOT_TOKEN` | Slack app → OAuth & Permissions → Bot User OAuth Token |
-| `SLACK_SIGNING_SECRET` | Slack app → Basic Information → Signing Secret |
-| `MONDAY_API_TOKEN` | Monday.com → Avatar → Developers → My Access Tokens |
-| `MONDAY_BOARD_ID` | The number in your board's URL: `/boards/1234567890` |
+| Variable                 | Where to get it                                          |
+| ------------------------ | -------------------------------------------------------- |
+| `SLACK_BOT_TOKEN`      | Slack app → OAuth & Permissions → Bot User OAuth Token |
+| `SLACK_SIGNING_SECRET` | Slack app → Basic Information → Signing Secret         |
+| `MONDAY_API_TOKEN`     | Monday.com → Avatar → Developers → My Access Tokens   |
+| `MONDAY_BOARD_ID`      | The number in your board's URL:`/boards/1234567890`    |
 
 **Setting up Slack:** Go to [api.slack.com/apps](https://api.slack.com/apps) → Create New App → add these bot token scopes:
 `chat:write` · `files:read` · `channels:history` · `groups:history` · `im:history` · `mpim:history`
@@ -116,18 +116,18 @@ Business cards work too — just upload a photo and the bot will read it.
 ## 🔧 Troubleshooting
 
 **Bot not responding?**
+
 ```bash
 aws logs tail /aws/lambda/CrmContactManager-SlackHandler --follow
 ```
 
-| Symptom | Likely cause |
-|---------|-------------|
-| `Invalid signature` | Wrong `SLACK_SIGNING_SECRET` |
-| No response at all | Missing env vars or Slack events not configured |
-| Monday.com error | Token doesn't have board access, or wrong `MONDAY_BOARD_ID` |
-| Lambda timeout | Increase timeout to 60s in the Lambda console |
+| Symptom               | Likely cause                                                  |
+| --------------------- | ------------------------------------------------------------- |
+| `Invalid signature` | Wrong `SLACK_SIGNING_SECRET`                                |
+| No response at all    | Missing env vars or Slack events not configured               |
+| Monday.com error      | Token doesn't have board access, or wrong `MONDAY_BOARD_ID` |
+| Lambda timeout        | Increase timeout to 60s in the Lambda console                 |
 
 ---
 
-
-</div>
+`</div>`
